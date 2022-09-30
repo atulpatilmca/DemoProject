@@ -5,6 +5,7 @@ import 'dart:html';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:demoproject/post_model.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 // Comment
 
 Future<List<Post>> fetchPost() async {
@@ -28,12 +29,26 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  static final _MyAppState _singleton = _MyAppState._internal();
+  _MyAppState._internal();
+  factory _MyAppState() => _singleton;
+
   late Future<List<Post>> futurePost;
 
   @override
   void initState() {
     super.initState();
     futurePost = fetchPost();
+  }
+
+  void clickFunction() {
+    fetchPost();
+  }
+
+  Future<void> _refresh() {
+    return Future.delayed(
+      Duration(seconds: 110),
+    );
   }
 
   @override
@@ -47,6 +62,17 @@ class _MyAppState extends State<MyApp> {
       home: Scaffold(
         appBar: AppBar(
           title: Text('Fetch Data From API'),
+          actions: [
+            IconButton(
+              onPressed: () {
+                showSearch(
+                  context: context,
+                  delegate: CustomSearchDelegate(),
+                );
+              },
+              icon: const Icon(Icons.search),
+            ),
+          ],
         ),
         bottomNavigationBar: Container(
           height: 60,
@@ -80,7 +106,18 @@ class _MyAppState extends State<MyApp> {
               ),
               IconButton(
                 enableFeedback: false,
-                onPressed: () {},
+                onPressed: () {
+                  RefreshIndicator(
+                    triggerMode: RefreshIndicatorTriggerMode.onEdge,
+                    edgeOffset: 20,
+                    displacement: 200,
+                    strokeWidth: 5,
+                    color: Colors.blue,
+                    backgroundColor: Colors.red,
+                    onRefresh: _refresh,
+                    child: ListView(),
+                  );
+                },
                 icon: const Icon(
                   Icons.widgets_outlined,
                   color: Colors.white,
@@ -89,7 +126,7 @@ class _MyAppState extends State<MyApp> {
               ),
               IconButton(
                 enableFeedback: false,
-                onPressed: () {},
+                onPressed: clickFunction,
                 icon: const Icon(
                   Icons.person_outline,
                   color: Colors.white,
@@ -144,5 +181,41 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
     );
+  }
+}
+
+class CustomSearchDelegate extends SearchDelegate {
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    // TODO: implement buildResults
+    throw UnimplementedError();
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    // TODO: implement buildSuggestions
+    throw UnimplementedError();
   }
 }
